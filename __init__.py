@@ -42,10 +42,11 @@ class DifyConfig(ConfigBase):
         description="默认用户标识"
     )
     
-    tip: str = Field(
-        default="此项无需填写仅为提示作用",
-        title="请在人设市场获取Dify工具描述格式，并添加到您的人设中",
-        description="请在人设市场获取Dify工具描述格式，并添加到您的人设中"
+    
+    custom_prompt: str = Field(
+        default="",
+        title="自定义提示词",
+        description="自定义要注入到AI提示词中的内容"
     )
 
 class DifyAPIClient:
@@ -166,3 +167,47 @@ async def cleanup_plugin():
     core.logger.info(f"插件 '{plugin.name}' 正在清理...")
     # 这里可以添加清理逻辑，比如关闭连接等
     core.logger.success(f"插件 '{plugin.name}' 清理完成")
+
+
+@plugin.mount_prompt_inject_method(
+    name="dify_prompt_inject",
+    description="向AI注入Dify工具相关的提示词信息"
+)
+async def inject_dify_prompt(_ctx: AgentCtx) -> str:
+    """生成并返回需要注入到主提示词中的字符串。
+
+    Returns:
+        str: 需要注入的提示词文本。
+    """
+    try:
+        config = plugin.get_config(DifyConfig)
+        
+        prompt_parts = []
+        
+        # 添加自定义提示词
+        if config.custom_prompt.strip():
+            prompt_parts.append(config.custom_prompt.strip())
+        
+        # 默认添加Dify工具信息
+        dify_tool_info = """
+你可以使用以下Dify工具：
+- run_dify_workflow(inputs, user=None): 执行Dify工作流
+  - inputs: 工作流输入参数，字典格式，包含工作流所需的各种参数
+  - user: 可选的用户标识，用于区分不同用户的请求
+  - 返回: 工作流执行结果的详细描述
+
+使用示例：
+- run_dify_workflow({"query": "用户问题", "context": "相关上下文"})
+- run_dify_workflow({"input_text": "需要处理的文本"}, "user123")
+
+注意：确保传入的inputs参数符合目标Dify工作流的输入要求。"""
+        prompt_parts.append(dify_tool_info)
+        
+        # 组合最终的注入提示词
+        injected_prompt = "\n\n".join(prompt_parts)
+        core.logger.debug(f"为会话 {_ctx.from_chat_key} 注入Dify提示词")
+        return injected_prompt
+            
+    except Exception as e:
+        core.logger.error(f"注入Dify提示词时出错: {e}")
+        return ""
