@@ -40,7 +40,7 @@
 ## 开发信息
 
 - **作者**: wess09
-- **版本**: 1.0.2
+- **版本**: 1.0.3
 - **仓库**: https://github.com/wess09/nekro_plugin_dify
 
 ## 许可证

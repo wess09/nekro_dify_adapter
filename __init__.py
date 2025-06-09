@@ -11,7 +11,7 @@ plugin = NekroPlugin(
     module_name="dify_adapter",
     description="通过Dify API调用 Dify工作流 的插件",
     author="wess09",
-    version="1.0.2",
+    version="1.0.3",
     url="https://github.com/wess09/nekro_plugin_dify"
 )
 
