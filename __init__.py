@@ -11,7 +11,7 @@ plugin = NekroPlugin(
     module_name="dify_adapter",
     description="通过Dify API调用 Dify工作流 的插件",
     author="wess09",
-    version="1.0.3",
+    version="1.0.4",
     url="https://github.com/wess09/nekro_plugin_dify"
 )
 
@@ -22,6 +22,13 @@ from pydantic import Field
 @plugin.mount_config()
 class DifyConfig(ConfigBase):
     """Dify适配器配置"""
+    
+    star: str = Field(
+        default="欢迎给插件点点Star",
+        title="点点Star谢谢喵",
+        description="点点Star谢谢喵",
+        json_schema_extra={"required": True}
+    )
     
     api_key: str = Field(
         default="",
