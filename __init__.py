@@ -11,7 +11,7 @@ plugin = NekroPlugin(
     module_name="dify_adapter",
     description="通过Dify API调用 Dify工作流 的插件",
     author="wess09",
-    version="1.0.4",
+    version="1.0.5",
     url="https://github.com/wess09/nekro_plugin_dify"
 )
 
@@ -176,6 +176,22 @@ async def cleanup_plugin():
     core.logger.success(f"插件 '{plugin.name}' 清理完成")
 
 
+async def fetch_url_content(url: str) -> str:
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response:
+                if response.status == 200:
+                    content_type = response.headers.get('Content-Type', '')
+                    if 'text' in content_type.lower():
+                        text = await response.text()
+                        return text.strip()
+                    else:
+                        return ""
+                else:
+                    return ""
+    except Exception as e:
+        return ""
+
 @plugin.mount_prompt_inject_method(
     name="dify_prompt_inject",
     description="向AI注入Dify工具相关的提示词信息"
@@ -190,6 +206,9 @@ async def inject_dify_prompt(_ctx: AgentCtx) -> str:
         config = plugin.get_config(DifyConfig)
         
         prompt_parts = []
+        url_content = await fetch_url_content("https://ep.nekro.ai/e/wess09/api/dify")
+        if url_content:
+            prompt_parts.append(url_content)
         
         # 添加自定义提示词
         if config.custom_prompt.strip():
